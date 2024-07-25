@@ -18,4 +18,4 @@ DOCKER COMMAND TO START IMAGE / CONTAINER
 $ docker-compose up -d --force-recreate
 
 
-LEFT OFF: SETTING UP THE KAFKA PRODUCER 23:48
+LEFT OFF: Producing to Kafka with logging middleware: 13:20
