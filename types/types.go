@@ -1,5 +1,8 @@
 package types
 
+type Distance struct {
+	Distance
+}
 
 type OBUData struct {
 	OBUID int `json:"obuID"`

@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var kafkaTopic = "obudata"
 
 func main() {
 
@@ -32,10 +31,17 @@ type DataReceiver struct {
 }
 
 func NewDataReceiver() (*DataReceiver, error) {
-	p, err := NewKafkaProducer()
+	var (
+		p DataProducer
+		err error
+		kafkaTopic = "obudata"
+	)
+
+	p, err = NewKafkaProducer(kafkaTopic)
 	if err != nil {
 		return nil, err
 	}
+	p = NewLogMiddleware(p)
 	// Delivery report handler for produced messages
 	return &DataReceiver{
 		msgch: make(chan types.OBUData, 128), // channel will block after 128.

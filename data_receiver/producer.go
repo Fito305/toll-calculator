@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	// "fmt"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/Fito305/tolling/types"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 type DataProducer interface {
@@ -14,9 +14,10 @@ type DataProducer interface {
 
 type KafkaProducer struct {
 	produce *kafka.Producer
+	topic   string
 }
 
-func NewKafkaProducer() (*KafkaProducer, error) {
+func NewKafkaProducer(topic string) (DataProducer, error) {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 	if err != nil {
 		return nil, err
@@ -27,9 +28,9 @@ func NewKafkaProducer() (*KafkaProducer, error) {
 			switch ev := e.(type) {
 			case *kafka.Message:
 				if ev.TopicPartition.Error != nil {
-					fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
+					// fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
 				} else {
-					fmt.Printf("Delivered message to %v\n", ev.TopicPartition)
+					// fmt.Printf("Delivered message to %v\n", ev.TopicPartition)
 				}
 			}
 		}
@@ -37,6 +38,7 @@ func NewKafkaProducer() (*KafkaProducer, error) {
 
 	return &KafkaProducer{
 		produce: p,
+		topic: topic,
 	}, nil
 }
 
@@ -47,7 +49,7 @@ func (p *KafkaProducer) ProduceData(data types.OBUData) error {
 	}
 	return p.produce.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{
-			Topic:     &kafkaTopic,
+			Topic:     &p.topic,
 			Partition: kafka.PartitionAny,
 		},
 		Value: b, //[]byte("testing producing"), replaced by b

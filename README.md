@@ -18,4 +18,15 @@ DOCKER COMMAND TO START IMAGE / CONTAINER
 $ docker-compose up -d --force-recreate
 
 
-LEFT OFF: Producing to Kafka with logging middleware: 13:20
+In the Make file
+	# @go build -o bin/receiver data_receiver/main.go 
+	## If you are going to build this with main.go 
+	# it's going to build this main.go file singlely. 
+	# So basically what is oging to happen is if you
+	# have other files that main depends on, it's not
+	# going to work. So you need to build the whole folder.   
+
+.PHONY in the Makefile - using it when the Makefile is not updating my main file. If it tells you there is no updates, put it to .Phony to force it to update.
+
+
+LEFT OFF: Coding the invoice aggregator 20:36

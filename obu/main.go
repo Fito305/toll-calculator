@@ -11,7 +11,7 @@ import (
     "github.com/gorilla/websocket"
 )
 const wsEndpoint = "ws://127.0.0.1:30000/ws"
-var sendInterval = time.Second
+var sendInterval = time.Second * 5
 
 
 func genLatLong() (float64, float64) {
