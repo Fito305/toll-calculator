@@ -1,11 +1,19 @@
 package types
 
+type Invoice struct {
+	OBUID         int     `json:"obuID"`
+	TotalDistance float64 `json:"totalDistance"`
+	TotalAmount   float64 `json:"totalAmount"`
+}
+
 type Distance struct {
-	Distance
+	Value float64 `json:"value"`
+	OBUID int     `json:"obuID"`
+	Unix  int64   `json:"unix"` // This is a timestamp - unix is used instead of timestamp.
 }
 
 type OBUData struct {
-	OBUID int `json:"obuID"`
-	Lat float64 `json:"lat"` // Latitude
-	Long float64 `json:"long"` // Longitude
+	OBUID int     `json:"obuID"`
+	Lat   float64 `json:"lat"`  // Latitude
+	Long  float64 `json:"long"` // Longitude
 }

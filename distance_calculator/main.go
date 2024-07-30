@@ -4,13 +4,17 @@ import (
 	"log"
 
 	// "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/Fito305/tolling/aggregator/client"
 )
 
 // type DistanceCalculator struct {
 // 	consumer DataConsumer
 // }
 
-const kafkaTopic = "obudata"
+const (
+	kafkaTopic = "obudata"
+	aggregatorEndpoint = "http://127.0.0.1:3000/aggregate"
+)
 
 // Transport could be (HTTP, GRPC, kafka) -> attach business logic to this transport
 // we are using kafka. But the beautiful thing is that if we wanted to change the transport to 
@@ -25,7 +29,7 @@ func main() {
 	svc = NewCalculatorService()
 	svc = NewLogMiddleware(svc)
 
-	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, svc)
+	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, svc, client.NewClient(aggregatorEndpoint))
 	if err != nil {
 		log.Fatal(err)
 	}

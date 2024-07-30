@@ -29,4 +29,15 @@ In the Make file
 .PHONY in the Makefile - using it when the Makefile is not updating my main file. If it tells you there is no updates, put it to .Phony to force it to update.
 
 
-LEFT OFF: Coding the invoice aggregator 20:36
+What is a GATEWAY? In a Micro Service infastructure you are going to have multiple services,
+and there is going to be some kind of client. The client could be some kind of mobile
+application or a frontend. It could be anything. And that frontend is going to 
+retrieve some data. For example, in our case the frontend wants to fetch an invoice for 
+a specific OBU. Give me all the coordinates send during this month for this OBU. SO directly
+form the IU we are going to access our gateway. Why? Because all our authentication, all our stuff
+is going to be in that gateway. So we don't need to do that for these Micro Services. We don't 
+want to hassle with authentication in our micro services because for some companies this effect could have
+100, 200 micro services. We don't want to implement all that logic. So the GATEWAY is going to
+be responsible for that stuff. It's basically, our API.
+
+LEFT OFF: Implementing GRPC and Protobuffers as our second transport layer
