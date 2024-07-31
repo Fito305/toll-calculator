@@ -5,25 +5,46 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 
 	"github.com/Fito305/tolling/types"
+	"google.golang.org/grpc"
 	// "github.com/sirupsen/logrus"
 )
 
 func main() {
 	// You can pass in a `flag` in the command line to change the address `--listenaddr <port>`
-	listenAddr := flag.String("listenAddr", ":3000", "the listen address of the HTTP transport server")
+	httpListenAddr := flag.String("httpAddr", ":3000", "the listen address of the HTTP transport server")
+	grpcListenAddr := flag.String("grpcAddr", ":3001", "the listen address of the GRPC transport server")
 	flag.Parse() // you have to parse it.
 	var (
 		store = NewMemoryStore()
 		svc   = NewInvoiceAggregator(store)
 	)
 	svc = NewLogMiddleware(svc)
+	go makeGRPCTransport(*grpcListenAddr, svc) // *grpcListenAddr dereference. You need to put it in a `go` routine. But need to have a mechanic to close it.
 	// if you see a star like this it means *listenAddr - we are dereferencing it with *.
-	makeHTTPTransport(*listenAddr, svc) // parameters must be passed in the same order as the func definition.
+	makeHTTPTransport(*httpListenAddr, svc) // parameters must be passed in the same order as the func definition.
 	// Make a transporter
+}
+
+// GRPC server. Transport.
+func makeGRPCTransport(listenAddr string, svc Aggregator) error {
+	fmt.Println("GRPC transport running on port ", listenAddr)
+	// We need to make a TCP listener first.
+	ln, err := net.Listen("TCP", listenAddr)
+	if err != nil {
+		return err
+	}
+	defer ln.Close() // close the 'go' routine in main() 
+	// Make a new GRPC native server with (options)
+	server := grpc.NewServer([]grpc.ServerOption{}...) // ... is an elipses
+	// Register (OUR) GRPC server implementation to the GRPC package
+	// This serves the GRPC request.
+	types.RegisterAggregatorServer(server, NewAggregatorGRPCServer(svc)) // server is the native server & NEWGRPCServer is the GRPC server.
+	return server.Serve(ln)
 }
 
 func makeHTTPTransport(listenAddr string, svc Aggregator) {
@@ -33,6 +54,7 @@ func makeHTTPTransport(listenAddr string, svc Aggregator) {
 	http.ListenAndServe(listenAddr, nil)
 }
 
+// This is the HTTP JSON server. Transport.
 func handleGetInvoice(svc Aggregator) http.HandlerFunc { // The decorator allows us to intergrate interface Aggregator for http use cases.
 	return func(w http.ResponseWriter, r *http.Request) { // !!! DECORATOR PATTERN !!!
 	// fmt.Println(r.URL.Query()) // how to infer the url to get it logged. Query() gives you a map and URL alone jsut the URL string.
@@ -88,3 +110,8 @@ func writeJSON(w http.ResponseWriter, status int, v any) error {
 // Very important: if you are making Mircro Services, in a company. You are not going to just make your service and call
 // it a day. You are also going to make a client for your Micro Service. A client which is a simple package that
 // people can import to interact with your Micro Service.
+
+
+// makeGRPCTransport() in this function, we are going to make a TCP listener. 
+// Then we make the server for GRPC. The server from the package itself. From the GRPC 
+// package. And then we need to register our Aggregator server.

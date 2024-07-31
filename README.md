@@ -40,4 +40,7 @@ want to hassle with authentication in our micro services because for some compan
 100, 200 micro services. We don't want to implement all that logic. So the GATEWAY is going to
 be responsible for that stuff. It's basically, our API.
 
-LEFT OFF: Implementing GRPC and Protobuffers as our second transport layer
+
+grpc is actually tcp. We need to have a port etc..
+
+LEFT OFF: Aggregator GRPC client.

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "github.com/Fito305/tolling/types";
+
+service Aggregator { // we need to encapsulate it and then say which methods this is going ot have. 
+    rpc Aggregate(AggregateRequest) returns (None); // None because you need to return something but we don't actually return an error but that is being handled.
+
+}
+message None {}
+
+// In protobuffer we need to write protobuffer message and it 
+// needs to be compiled.
+message AggregateRequest {
+    int32 ObuID = 1;
+    double Value = 2;
+    int64 Unix = 3;
+}
+
+
+
+// Every time you make changes to this file you must compile it. $ make proto
