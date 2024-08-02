@@ -1,7 +1,7 @@
 package main
 
 import (
-	
+	"context"
 
 	"github.com/Fito305/tolling/types"
 )
@@ -17,13 +17,13 @@ func NewAggregatorGRPCServer(svc Aggregator) *GRPCAggregatorServer {
 		}
 }
 
-func (s *GRPCAggregatorServer) AggregateDistance(req *types.AggregateRequest) error {
+func (s *GRPCAggregatorServer) Aggregate(ctx context.Context, req *types.AggregateRequest) (*types.None, error) {
 	distance := types.Distance{
 		OBUID: int(req.ObuID), // conversions happen here.
 		Value: req.Value,	// via the req parameter.
 		Unix: req.Unix,
 	}
-	return s.svc.AggregateDistance(distance)	// (1)
+	return &types.None{}, s.svc.AggregateDistance(distance)	// (1)
 	// Why can we just return it? Because AggregateDistance is returning an error.
 }
 
@@ -52,3 +52,8 @@ func (s *GRPCAggregatorServer) AggregateDistance(req *types.AggregateRequest) er
 
 // An maybe you'll have for example a ```Webpack``` transport then it'll go to type.WEBpack then convert 
 // to types.Distance. So everybody has to convert to a types.Distance.
+
+// Normally a rpc request means that it is a request and a response. "Hey give me the username" and it 
+// returns the username. But in our case it is AggregateDistance, which we send but the 
+// only thing we care about is if there is an error or not. We don't have any result and that is why
+// we use the type.None in the return of Aggregate()

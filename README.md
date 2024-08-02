@@ -43,4 +43,4 @@ be responsible for that stuff. It's basically, our API.
 
 grpc is actually tcp. We need to have a port etc..
 
-LEFT OFF: Aggregator GRPC client.
+LEFT OFF: Internal Service communication
