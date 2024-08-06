@@ -38,9 +38,27 @@ form the IU we are going to access our gateway. Why? Because all our authenticat
 is going to be in that gateway. So we don't need to do that for these Micro Services. We don't 
 want to hassle with authentication in our micro services because for some companies this effect could have
 100, 200 micro services. We don't want to implement all that logic. So the GATEWAY is going to
-be responsible for that stuff. It's basically, our API.
+be responsible for that stuff. It's basically, our API. A GATEWAY is a user facing API.
+That is only used by the end user. For example, let's say we build a tolling stack, 
+it's going to have a mobile app for some people, a UI for some people, a UI for administration,
+a UI for the customers, so they are all going to interact with the GATEWAY. 
+They are not going to interact with the services but with the GATEWAY. It's a very simple 
+JSON API that sits in front of all our microservices. It's going to handle authentication,
+and everything else. Most of the time it is going to recieve JSON.  The GATEWAY is a proxy between
+the users, the clients, the mobile apps and the services. The GATEWAY needs to sit in between.
 
+INSTRUMENT - means have the aggregator have perfect logging, make the aggregator have perfect metrics.
+As if we are going to production.
+Instrumentaions is basically makig sure that we have logging already but we also want ot have some metrics.
+For example of metrics we want, maybe we want to have a counter that counts each time we access some kind of ....
+You should have metrics for each single service. 
+
+Prometheus -- is a deamon (runs in the background) that runs on your system. It will scrape 
+metrics from the Prometheus client (endpoint we need to configure). 
+And then you can expose them to Graphana.
+
+Graphana - one of the most used things to do metrics.
 
 grpc is actually tcp. We need to have a port etc..
 
-LEFT OFF: Internal Service communication
+LEFT OFF: Metrics layer with Prometheus 26:28

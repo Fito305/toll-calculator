@@ -1,6 +1,8 @@
 package client
 
 import (
+	"context"
+
 
 	"github.com/Fito305/tolling/types"
 	"google.golang.org/grpc"
@@ -8,7 +10,7 @@ import (
 
 type GRPCClient struct {
 	Endpoint string
-	types.AggregatorClient // It's embedded so we have direct access to everything the AggregatorClient has.
+	client types.AggregatorClient 
 }
 
 func NewGRPCClient(endpoint string) (*GRPCClient, error) {
@@ -19,6 +21,11 @@ func NewGRPCClient(endpoint string) (*GRPCClient, error) {
 	c := types.NewAggregatorClient(conn)
 	return &GRPCClient{
 		Endpoint: endpoint,
-		AggregatorClient: c, // We are embedding AggregatorClient here.
+		client: c, // We are embedding AggregatorClient here.
 	}, nil
+}
+
+func (c *GRPCClient) Aggregate(ctx context.Context, req *types.AggregateRequest) error {
+	_, err := c.client.Aggregate(ctx, req)
+	return err
 }

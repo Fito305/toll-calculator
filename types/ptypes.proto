@@ -6,7 +6,12 @@ service Aggregator { // we need to encapsulate it and then say which methods thi
     rpc Aggregate(AggregateRequest) returns (None); // None because you need to return something but we don't actually return an error but that is being handled.
 
 }
+
 message None {}
+
+message GetInvoiceRequest {
+    int32 ObuID = 1; 
+}
 
 // In protobuffer we need to write protobuffer message and it 
 // needs to be compiled.
@@ -19,3 +24,7 @@ message AggregateRequest {
 
 
 // Every time you make changes to this file you must compile it. $ make proto
+
+// It's awlays a good idea to seperate your request data (data that is coming from a request)
+// and the data you are using as your business logic. GetInvoiceRequest is pure transport based.
+ 

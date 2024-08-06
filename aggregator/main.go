@@ -2,20 +2,21 @@
 package main
 
 import (
-	"context"
+	// "context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
 	"log"
-	"time"
+	// "time"
 	"strconv"
 
 	"github.com/Fito305/tolling/types"
-	"github.com/Fito305/tolling/aggregator/client"
+	// "github.com/Fito305/tolling/aggregator/client"
 	"google.golang.org/grpc"
 	// "github.com/sirupsen/logrus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -27,22 +28,11 @@ func main() {
 		store = NewMemoryStore()
 		svc   = NewInvoiceAggregator(store)
 	)
+	svc = NewMetricsMiddleware(svc)
 	svc = NewLogMiddleware(svc)
 	go func () {
 		log.Fatal(makeGRPCTransport(*grpcListenAddr, svc)) // *grpcListenAddr dereference. You need to put it in a `go` routine. But need to have a mechanic to close it.
 	}()
-	time.Sleep(time.Second * 5)
-	c, err := client.NewGRPCClient(*grpcListenAddr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err := c.Aggregate(context.Background(), &types.AggregateRequest{
-		ObuID: 1,
-		Value: 58.55,
-		Unix: time.Now().UnixNano(),
-	}); err != nil {
-		log.Fatal(err)
-	}
 	// if you see a star like this it means *listenAddr - we are dereferencing it with *.
 	log.Fatal(makeHTTPTransport(*httpListenAddr, svc)) // parameters must be passed in the same order as the func definition.
 	// Make a transporter
@@ -69,6 +59,7 @@ func makeHTTPTransport(listenAddr string, svc Aggregator) error {
 	fmt.Println("HTTP transport running on port ", listenAddr)
 	http.HandleFunc("/aggregate", handleAggregate(svc)) // You cannot attach the http transport to the Aggregator interface that is something you cannot do. You can do a http.HandleFunc
 	http.HandleFunc("/invoice", handleGetInvoice(svc))
+	http.Handle("/metrics", promhttp.Handler())
 	return http.ListenAndServe(listenAddr, nil)
 }
 
