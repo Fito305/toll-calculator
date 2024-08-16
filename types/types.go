@@ -1,11 +1,15 @@
 package types
 
+// This should be transport indepedent. Which means that
+// json should not play a role in this thing.
 type Invoice struct {
 	OBUID         int     `json:"obuID"`
 	TotalDistance float64 `json:"totalDistance"`
 	TotalAmount   float64 `json:"totalAmount"`
 }
 
+// Types is BUSINESS DOMAIN. This Distance is what your business logic needs
+// to operate.
 type Distance struct {
 	Value float64 `json:"value"`
 	OBUID int     `json:"obuID"`
