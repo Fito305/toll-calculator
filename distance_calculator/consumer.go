@@ -42,6 +42,13 @@ func NewKafkaConsumer(topic string, svc CalculatorServicer, aggClient client.Cli
 	}, nil
 }
 
+
+// You have to make sure you close your loops.
+// It's good practice.
+func (c *KafkaConsumer) Close() {
+	c.isRunning = false
+}
+
 func (c *KafkaConsumer) Start() {
 	logrus.Info("kafka transport started")
 	c.isRunning = true
@@ -59,6 +66,10 @@ func (c *KafkaConsumer) readMessageLoop() {
 		var data types.OBUData
 		if err := json.Unmarshal(msg.Value, &data); err != nil {
 			logrus.Errorf("JSON serialization error: %s", err) // ***!!! Very important, in development, when we first make these things we use JSOn because it is easy to debug. But once we go to production, once the whole architecture is set up and all tests are working, **Then we swap out to **ProtoBuffers to make it faster. Once everything is implemented. 
+			logrus.WithFields(logrus.Fields{
+				"err": err,
+				"requestID": data.RequestID, // !!!!!! Make sure you log out RequestID to track the request during flight. ANd if that request becomes a bug you can pin point it.
+			})
 			continue // This is important we are going ot continue like above.
 		}
 		distance, err := c.calcService.CalculateDistance(data)

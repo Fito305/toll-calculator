@@ -106,3 +106,11 @@ make build
 
 ../prometheus/prometheus --config.file=.config/prometheus.yml
 ```
+
+Use .env enviroment variables
+```
+
+https:// <--- delete the http part when using `go get`
+go get github.com/joho/godotenv
+
+```

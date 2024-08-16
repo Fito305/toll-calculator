@@ -4,15 +4,16 @@ package main
 import (
 	// "context"
 	"encoding/json"
-	"flag"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
-	"log"
+	"os"
 	// "time"
-	"strconv"
+	// "strconv"
 
 	"github.com/Fito305/tolling/types"
+	"github.com/joho/godotenv"
 	// "github.com/Fito305/tolling/aggregator/client"
 	"google.golang.org/grpc"
 	// "github.com/sirupsen/logrus"
@@ -20,21 +21,24 @@ import (
 )
 
 func main() {
-	// You can pass in a `flag` in the command line to change the address `--listenaddr <port>`
-	httpListenAddr := flag.String("httpAddr", ":3000", "the listen address of the HTTP transport server")
-	grpcListenAddr := flag.String("grpcAddr", ":3001", "the listen address of the GRPC transport server")
-	flag.Parse() // you have to parse it.
+	// to use the .env file enviroment variables.
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
 	var (
-		store = NewMemoryStore()
-		svc   = NewInvoiceAggregator(store)
+		store = makeStore()
+		// store = NewMemoryStore()
+		svc            = NewInvoiceAggregator(store)
+		grpcListenAddr = os.Getenv("AGG_GRPC_ENDPOINT")
+		httpListenAddr = os.Getenv("AGG_HTTP_ENDPOINT")
 	)
 	svc = NewMetricsMiddleware(svc)
 	svc = NewLogMiddleware(svc)
-	go func () {
-		log.Fatal(makeGRPCTransport(*grpcListenAddr, svc)) // *grpcListenAddr dereference. You need to put it in a `go` routine. But need to have a mechanic to close it.
+	go func() {
+		log.Fatal(makeGRPCTransport(grpcListenAddr, svc)) // *grpcListenAddr dereference. You need to put it in a `go` routine. But need to have a mechanic to close it.
 	}()
 	// if you see a star like this it means *listenAddr - we are dereferencing it with *.
-	log.Fatal(makeHTTPTransport(*httpListenAddr, svc)) // parameters must be passed in the same order as the func definition.
+	log.Fatal(makeHTTPTransport(httpListenAddr, svc)) // parameters must be passed in the same order as the func definition.
 	// Make a transporter
 }
 
@@ -46,7 +50,7 @@ func makeGRPCTransport(listenAddr string, svc Aggregator) error {
 	if err != nil {
 		return err
 	}
-	defer ln.Close() // close the 'go' routine in main() 
+	defer ln.Close() // close the 'go' routine in main()
 	// Make a new GRPC native server with (options)
 	server := grpc.NewServer([]grpc.ServerOption{}...) // ... is an elipses
 	// Register (OUR) GRPC server implementation to the GRPC package
@@ -56,48 +60,28 @@ func makeGRPCTransport(listenAddr string, svc Aggregator) error {
 }
 
 func makeHTTPTransport(listenAddr string, svc Aggregator) error {
-	fmt.Println("HTTP transport running on port ", listenAddr)
-	http.HandleFunc("/aggregate", handleAggregate(svc)) // You cannot attach the http transport to the Aggregator interface that is something you cannot do. You can do a http.HandleFunc
-	http.HandleFunc("/invoice", handleGetInvoice(svc))
+	var (
+		aggMetricHandler = newHTTPMetricsHandler("aggregate")
+		invMetricHandler = newHTTPMetricsHandler("invoice")
+		aggregateHandler = makeHTTPHandlerFunc(aggMetricHandler.instrument(handleAggregate(svc)))
+		invoiceHandler   = makeHTTPHandlerFunc(invMetricHandler.instrument(handleGetInvoice(svc)))
+	)
+	http.HandleFunc("/invoice", invoiceHandler)
+	http.HandleFunc("/aggregate", aggregateHandler)
+	// http.HandleFunc("/invoice", invMetricHandler.instrument(handleGetInvoice(svc)))
 	http.Handle("/metrics", promhttp.Handler())
+	fmt.Println("HTTP transport running on port ", listenAddr)
 	return http.ListenAndServe(listenAddr, nil)
 }
 
-// This is the HTTP JSON server. Transport.
-func handleGetInvoice(svc Aggregator) http.HandlerFunc { // The decorator allows us to intergrate interface Aggregator for http use cases.
-	return func(w http.ResponseWriter, r *http.Request) { // !!! DECORATOR PATTERN !!!
-	// fmt.Println(r.URL.Query()) // how to infer the url to get it logged. Query() gives you a map and URL alone jsut the URL string.
-	values, ok := r.URL.Query()["obu"]
-	if !ok {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing OBU ID"})
-		return
-	}
-	obuID, err := strconv.Atoi(values[0])
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid obu id"})
-		return
-	}
-	invoice, err := svc.CalculateInvoice(obuID)
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()}) // we do err.Error() because if you want a string of error you have to call Error()
-		return 
-	}
-	writeJSON(w, http.StatusOK, invoice)
-  }
-}
-
-// A transport
-func handleAggregate(svc Aggregator) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) { // !Decorator Pattern!
-		var distance types.Distance
-		if err := json.NewDecoder(r.Body).Decode(&distance); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
-			return
-		}
-		if err := svc.AggregateDistance(distance); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
+func makeStore() Storer {
+	storeType := os.Getenv("AGG_STORE_TYPE")
+	switch storeType {
+	case "memory":
+		return NewMemoryStore()
+	default:
+		log.Fatalf("invalid store type given %s", storeType)
+		return nil
 	}
 }
 
@@ -120,7 +104,6 @@ func writeJSON(w http.ResponseWriter, status int, v any) error {
 // it a day. You are also going to make a client for your Micro Service. A client which is a simple package that
 // people can import to interact with your Micro Service.
 
-
-// makeGRPCTransport() in this function, we are going to make a TCP listener. 
-// Then we make the server for GRPC. The server from the package itself. From the GRPC 
+// makeGRPCTransport() in this function, we are going to make a TCP listener.
+// Then we make the server for GRPC. The server from the package itself. From the GRPC
 // package. And then we need to register our Aggregator server.

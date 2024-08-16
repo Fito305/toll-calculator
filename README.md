@@ -55,10 +55,10 @@ You should have metrics for each single service.
 
 Prometheus -- is a deamon (runs in the background) that runs on your system. It will scrape 
 metrics from the Prometheus client (endpoint we need to configure). 
-And then you can expose them to Graphana.
+And then you can expose them to Grafana.
 
-Graphana - one of the most used things to do metrics.
+Grafana - one of the most used things to do metrics.
 
 grpc is actually tcp. We need to have a port etc..
 
-LEFT OFF: Metrics layer with Prometheus 26:28
+LEFT OFF: Building services with go-kit 22:51

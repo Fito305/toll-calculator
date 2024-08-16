@@ -5,6 +5,8 @@ import (
 	// "encoding/json"
 	"log"
 	"net/http"
+	"math"
+	"math/rand"
 
 	"github.com/Fito305/tolling/types"
 	// "github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -30,6 +32,7 @@ type DataReceiver struct {
 	prod DataProducer // This removed the hard coded dep above.
 }
 
+// The first endpoint in our micro services.
 func NewDataReceiver() (*DataReceiver, error) {
 	var (
 		p DataProducer
@@ -75,6 +78,7 @@ func (dr *DataReceiver) wsReceiveLoop() {
 			log.Println("read error:", err)
 			continue // If one truck sends incorrect obudata you cannot close because no other trucks will be able to send data.
 		}
+		data.RequestID = rand.Intn(math.MaxInt) // To track the request from client while in flight. Look at types. OBUData.RequestID for info.
 		if err := dr.produceData(data); err != nil {
 			fmt.Println("kafka produce error:", err)
 		}

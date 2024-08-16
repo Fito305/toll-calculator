@@ -4,9 +4,9 @@ import (
 	"fmt"
     "log"
 	"time"
-	"math"
 	"math/rand"
 
+	// "github.com/alexsasharegan/dotenv"
     "github.com/Fito305/tolling/types"
     "github.com/gorilla/websocket"
 )
@@ -57,5 +57,9 @@ func generateOBUIDS(n int) []int {
 }
 
 func init() {
+	// add this line to use the `github.com/alexsasharegen/dotenv` .env file Enviroment variables.
+	// if err := dotenv.Load(); err != nil {
+	// 	log.Fatal(err)
+	// }
 	rand.Seed(time.Now().UnixNano()) // Why do we need to do that? To make sure we have random data. 
 }
