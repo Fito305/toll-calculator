@@ -2,8 +2,11 @@ package aggservice
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/Fito305/tolling/types"
+	"github.com/go-kit/kit/log"
 )
 
 const basePrice = 3.15 // const go ontop of your file.
@@ -29,6 +32,8 @@ func newBasicService(store Storer) Service {
 }
 
 func (svc *BasicService) Aggregate(_ context.Context, dist types.Distance) error {
+	// This will print if the wrapped logging does not.
+	fmt.Println("this is coming from the internal business logic layer")
 	return svc.store.Insert(dist)
 }
 
@@ -47,11 +52,11 @@ func (svc *BasicService) Calculate(_ context.Context, obuID int) (*types.Invoice
 
 // NewAggregatorService will construct a complete microservice
 // with Logging and instrumentation middleware.
-func NewAggregatorService() Service {
+func New(logger log.Logger) Service {
 	var svc Service
 	{
 		svc = newBasicService(NewMemoryStore()) // We are making these onions by wrapping them.
-		svc = newLoggingMiddleware()(svc)
+		svc = newLoggingMiddleware(logger)(svc)
 		svc = newInstrumentationMiddleware()(svc)
 	}
 	return svc

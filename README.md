@@ -61,4 +61,4 @@ Grafana - one of the most used things to do metrics.
 
 grpc is actually tcp. We need to have a port etc..
 
-LEFT OFF: Building Services with go-kit | circuit breaking & rate limiting
+LEFT OFF: Finshing the aggregator service with go-kit
